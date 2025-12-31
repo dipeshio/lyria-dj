@@ -54,9 +54,6 @@ class LiveMusicService extends EventTarget {
     /**
      * Enhance a basic prompt with more descriptive detail
      */
-    /**
-     * Enhance a basic prompt with more descriptive detail
-     */
     async enhancePrompt(basePrompt) {
         if (!this.ai) return basePrompt;
 
@@ -67,9 +64,19 @@ class LiveMusicService extends EventTarget {
                 contents: [{
                     role: 'user',
                     parts: [{
-                        text: `Rewrite the following music description to be more detailed, creative, and suitable for an AI music generator. 
-                        Keep it under 20 words. Focus on mood, instruments, and texture.
-                        Input: "${basePrompt}"`
+                        text: `You are enhancing a music description for an AI music generator.
+                        
+IMPORTANT RULES:
+1. If the prompt mentions a VIDEO GAME (e.g., "Pokemon", "Zelda", "Final Fantasy"), preserve the game reference and add descriptive details about that game's iconic sound (chiptunes, orchestral, 8-bit, etc.).
+2. If the prompt mentions an ANIME or MOVIE, keep the source reference and describe its musical style.
+3. Do NOT generalize or remove specific references. Enhance them with texture, instrumentation, and mood.
+4. Keep under 25 words.
+
+Examples:
+- "Pokemon music" → "Upbeat chiptune adventure with 8-bit Game Boy synths, triumphant brass, and nostalgic Pokemon battle energy"
+- "Zelda soundtrack" → "Orchestral fantasy adventure with harp arpeggios, sweeping strings, and heroic Zelda-style melodies"
+
+Now enhance: "${basePrompt}"`
                     }]
                 }]
             });
@@ -84,7 +91,7 @@ class LiveMusicService extends EventTarget {
                 enhanced = result.text;
             }
 
-            const cleanEnhanced = enhanced.trim().replace(/^"|"$/g, '');
+            const cleanEnhanced = enhanced.trim().replace(/^["']|["']$/g, '');
             console.log('✅ [AI] Enhanced prompt:', cleanEnhanced);
             return cleanEnhanced;
         } catch (error) {
