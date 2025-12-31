@@ -3,13 +3,43 @@
  */
 import { useState } from 'react';
 
-export default function PromptConsole({ onSubmit, isPlaying }) {
+export default function PromptConsole({ onSubmit, isPlaying, onOptimize, onAutoGenerate }) {
     const [prompt, setPrompt] = useState('');
+    const [isOptimizing, setIsOptimizing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (prompt.trim()) {
             onSubmit(prompt.trim());
+        }
+    };
+
+    const handleOptimizeClick = async () => {
+        if (!prompt.trim() || !onOptimize) return;
+
+        setIsOptimizing(true);
+        try {
+            const enhanced = await onOptimize(prompt);
+            if (enhanced) setPrompt(enhanced);
+        } catch (error) {
+            console.error('Optimization failed:', error);
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
+
+    const handleAutoGenerateClick = async () => {
+        if (!onAutoGenerate) return;
+
+        setIsGenerating(true);
+        try {
+            const creative = await onAutoGenerate();
+            if (creative) setPrompt(creative);
+        } catch (error) {
+            console.error('Auto-generation failed:', error);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -33,11 +63,13 @@ export default function PromptConsole({ onSubmit, isPlaying }) {
               bg-transparent
               placeholder:text-muted
               focus:border-terracotta
+              disabled:opacity-50
             "
                         style={{
                             borderColor: '#1F1E1D',
                             color: '#1F1E1D',
                         }}
+                        disabled={isOptimizing || isGenerating}
                     />
 
                     {/* Character count */}
@@ -49,17 +81,14 @@ export default function PromptConsole({ onSubmit, isPlaying }) {
                     </span>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                     {/* Optimize Button */}
                     <button
                         type="button"
-                        onClick={() => {
-                            // Simple heuristic optimization since we don't have text-gen capability wired up yet
-                            setPrompt(`High quality, professional audio, ${prompt.trim() || 'lofi hip hop'}, clear mixing, detailed instrumentation`);
-                        }}
-                        disabled={!prompt.trim()}
+                        onClick={handleOptimizeClick}
+                        disabled={!prompt.trim() || isOptimizing || isGenerating || !onOptimize}
                         className="
-                px-6 py-3
+                flex items-center gap-2 px-6 py-3
                 font-serif text-xs uppercase tracking-widest
                 border transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
@@ -69,43 +98,54 @@ export default function PromptConsole({ onSubmit, isPlaying }) {
                             color: '#1F1E1D',
                             backgroundColor: 'transparent',
                         }}
-                        onMouseEnter={(e) => {
-                            if (prompt.trim()) {
-                                e.target.style.backgroundColor = '#E5E7EB';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = 'transparent';
-                        }}
-                        title="Enhance prompt with better keywords"
+                        title="Enhance prompt with better keywords using AI"
                     >
-                        ✨ Optimize
+                        {isOptimizing ? (
+                            <span className="animate-pulse">✨ Refining...</span>
+                        ) : (
+                            <>✨ Optimize</>
+                        )}
+                    </button>
+
+                    {/* Auto-Generate Button */}
+                    <button
+                        type="button"
+                        onClick={handleAutoGenerateClick}
+                        disabled={isOptimizing || isGenerating || !onAutoGenerate}
+                        className="
+                flex items-center gap-2 px-6 py-3
+                font-serif text-xs uppercase tracking-widest
+                border transition-all duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+              "
+                        style={{
+                            borderColor: '#B1ADA1',
+                            color: '#1F1E1D',
+                            backgroundColor: 'transparent',
+                        }}
+                        title="Generate a completely new creative prompt"
+                    >
+                        {isGenerating ? (
+                            <span className="animate-pulse">🎲 Thinking...</span>
+                        ) : (
+                            <>🎲 Inspire Me</>
+                        )}
                     </button>
 
                     {/* Submit button */}
                     <button
                         type="submit"
-                        disabled={!prompt.trim()}
+                        disabled={!prompt.trim() || isOptimizing || isGenerating}
                         className="
-                px-6 py-3
+                ml-auto px-6 py-3
                 font-serif text-xs uppercase tracking-widest
                 border transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
               "
                         style={{
                             borderColor: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
-                            color: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
-                            backgroundColor: 'transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                            if (prompt.trim()) {
-                                e.target.style.backgroundColor = '#1F1E1D';
-                                e.target.style.color = '#F5F3EE';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = 'transparent';
-                            e.target.style.color = prompt.trim() ? '#1F1E1D' : '#B1ADA1';
+                            color: prompt.trim() ? '#C15F3C' : '#B1ADA1',
+                            backgroundColor: prompt.trim() ? '#1F1E1D' : 'transparent',
                         }}
                     >
                         {isPlaying ? 'Update Stream' : 'Generate'}

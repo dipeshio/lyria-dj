@@ -40,6 +40,65 @@ class LiveMusicService extends EventTarget {
             apiKey,
             apiVersion: 'v1alpha'
         });
+
+        // Initialize Gemini model for text generation (prompt enhancement)
+        this.textModel = this.ai.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    }
+
+    /**
+     * Enhance a basic prompt with more descriptive detail
+     */
+    async enhancePrompt(basePrompt) {
+        if (!this.textModel) return basePrompt;
+
+        try {
+            console.log('✨ [AI] Enhancing prompt:', basePrompt);
+            const result = await this.textModel.generateContent({
+                contents: [{
+                    role: 'user',
+                    parts: [{
+                        text: `Rewrite the following music description to be more detailed, creative, and suitable for an AI music generator. 
+                        Keep it under 20 words. Focus on mood, instruments, and texture.
+                        Input: "${basePrompt}"`
+                    }]
+                }]
+            });
+            const enhanced = result.response.text().trim().replace(/^"|"$/g, '');
+            console.log('✅ [AI] Enhanced prompt:', enhanced);
+            return enhanced;
+        } catch (error) {
+            console.error('❌ [AI] Failed to enhance prompt:', error);
+            return basePrompt;
+        }
+    }
+
+    /**
+     * Generate a completely new creative prompt
+     */
+    async generateCreativePrompt() {
+        if (!this.textModel) return "Lofi hip hop beats to study to";
+
+        try {
+            console.log('🎲 [AI] Generating creative prompt...');
+            const genres = ['Lofi', 'Jazz', 'Ambient', 'Synthwave', 'Classical', 'Techno', 'Cinematic'];
+            const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+
+            const result = await this.textModel.generateContent({
+                contents: [{
+                    role: 'user',
+                    parts: [{
+                        text: `Generate a creative, short music description (under 15 words) for the genre: ${randomGenre}. 
+                        Focus on unique textures and atmosphere. Do not include quotes.`
+                    }]
+                }]
+            });
+            const creative = result.response.text().trim().replace(/^"|"$/g, '');
+            console.log('✅ [AI] Generated prompt:', creative);
+            return creative;
+        } catch (error) {
+            console.error('❌ [AI] Failed to generate prompt:', error);
+            return "Atmospheric lofi beats with soft rain texture";
+        }
     }
 
     /**

@@ -145,6 +145,23 @@ export default function App() {
         ]);
     }, []);
 
+    // Handle prompt optimization
+    const handleOptimize = useCallback(async (currentPrompt) => {
+        return await liveMusicService.enhancePrompt(currentPrompt);
+    }, []);
+
+    // Handle auto-generation
+    const handleAutoGenerate = useCallback(async () => {
+        const creativePrompt = await liveMusicService.generateCreativePrompt();
+        // Automatically play the generated prompt
+        setSelectedPreset(null);
+        setCustomPrompt(creativePrompt);
+        liveMusicService.setWeightedPrompts([
+            { text: creativePrompt, weight: 1.5 }
+        ]);
+        return creativePrompt;
+    }, []);
+
     // Handle play/pause
     const handlePlayPause = useCallback(() => {
         liveMusicService.playPause();
@@ -192,11 +209,8 @@ export default function App() {
                 >
                     PromptDJ Retro
                 </h1>
-                <p
-                    className="font-serif italic"
-                    style={{ color: '#B1ADA1' }}
-                >
-                    Infinite AI-generated music, steered by you
+                <p className="font-serif italic text-sm" style={{ color: '#B1ADA1' }}>
+                    AI-Powered Lofi Station • {activeEngine === 'lyria' ? 'Connected to Lyria' : 'Local Synth Fallback'}
                 </p>
             </header>
 
@@ -229,6 +243,8 @@ export default function App() {
                 <section>
                     <PromptConsole
                         onSubmit={handleCustomPrompt}
+                        onOptimize={handleOptimize}
+                        onAutoGenerate={handleAutoGenerate}
                         isPlaying={playbackState === 'playing'}
                     />
                 </section>
