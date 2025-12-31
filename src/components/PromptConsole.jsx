@@ -49,34 +49,68 @@ export default function PromptConsole({ onSubmit, isPlaying }) {
                     </span>
                 </div>
 
-                {/* Submit button styled as retro toggle */}
-                <button
-                    type="submit"
-                    disabled={!prompt.trim()}
-                    className="
-            self-start px-6 py-3
-            font-serif text-xs uppercase tracking-widest
-            border transition-all duration-150
-            disabled:opacity-40 disabled:cursor-not-allowed
-          "
-                    style={{
-                        borderColor: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
-                        color: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
-                        backgroundColor: 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                        if (prompt.trim()) {
-                            e.target.style.backgroundColor = '#1F1E1D';
-                            e.target.style.color = '#F5F3EE';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.color = prompt.trim() ? '#1F1E1D' : '#B1ADA1';
-                    }}
-                >
-                    {isPlaying ? 'Update Stream' : 'Generate'}
-                </button>
+                <div className="flex gap-4">
+                    {/* Optimize Button */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            // Simple heuristic optimization since we don't have text-gen capability wired up yet
+                            setPrompt(`High quality, professional audio, ${prompt.trim() || 'lofi hip hop'}, clear mixing, detailed instrumentation`);
+                        }}
+                        disabled={!prompt.trim()}
+                        className="
+                px-6 py-3
+                font-serif text-xs uppercase tracking-widest
+                border transition-all duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+              "
+                        style={{
+                            borderColor: '#B1ADA1',
+                            color: '#1F1E1D',
+                            backgroundColor: 'transparent',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (prompt.trim()) {
+                                e.target.style.backgroundColor = '#E5E7EB';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                        }}
+                        title="Enhance prompt with better keywords"
+                    >
+                        ✨ Optimize
+                    </button>
+
+                    {/* Submit button */}
+                    <button
+                        type="submit"
+                        disabled={!prompt.trim()}
+                        className="
+                px-6 py-3
+                font-serif text-xs uppercase tracking-widest
+                border transition-all duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+              "
+                        style={{
+                            borderColor: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
+                            color: prompt.trim() ? '#1F1E1D' : '#B1ADA1',
+                            backgroundColor: 'transparent',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (prompt.trim()) {
+                                e.target.style.backgroundColor = '#1F1E1D';
+                                e.target.style.color = '#F5F3EE';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = prompt.trim() ? '#1F1E1D' : '#B1ADA1';
+                        }}
+                    >
+                        {isPlaying ? 'Update Stream' : 'Generate'}
+                    </button>
+                </div>
             </form>
         </div>
     );

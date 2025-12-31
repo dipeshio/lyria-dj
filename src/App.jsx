@@ -216,6 +216,7 @@ export default function App() {
                             onChange={handleBpmChange}
                             defaultValue={90}
                             formatValue={(v) => Math.round(v).toString()}
+                            tooltip="Beats per minute. Stop/Play required to apply."
                         />
 
                         <Knob
@@ -227,6 +228,7 @@ export default function App() {
                             onChange={handleGuidanceChange}
                             defaultValue={4.0}
                             formatValue={(v) => v.toFixed(1)}
+                            tooltip="How strictly the model follows your prompt (Higher = stricter)"
                         />
 
                         <Knob
@@ -238,6 +240,7 @@ export default function App() {
                             onChange={handleDensityChange}
                             defaultValue={0.5}
                             formatValue={(v) => v.toFixed(2)}
+                            tooltip="Note density: Sparser (low) vs Busier (high)"
                         />
 
                         <Knob
@@ -249,6 +252,7 @@ export default function App() {
                             onChange={handleBrightnessChange}
                             defaultValue={0.5}
                             formatValue={(v) => v.toFixed(2)}
+                            tooltip="Tonal quality: Darker (low) vs Brighter (high)"
                         />
                     </div>
                 </section>

@@ -40,6 +40,33 @@ const PRESETS = [
             { text: 'Saxophone improvisation', weight: 0.8 },
         ],
     },
+    {
+        id: 'retrowave',
+        name: 'Retrowave',
+        prompts: [
+            { text: 'Synthwave', weight: 1.5 },
+            { text: 'Analog synthesizer', weight: 1.2 },
+            { text: '80s nostalgic', weight: 0.8 },
+        ],
+    },
+    {
+        id: 'cyberpunk',
+        name: 'Cyberpunk',
+        prompts: [
+            { text: 'Industrial cyberpunk', weight: 1.4 },
+            { text: 'Glitch electronics', weight: 1.0 },
+            { text: 'Dark synthesizer', weight: 0.9 },
+        ],
+    },
+    {
+        id: 'meditative',
+        name: 'Meditative',
+        prompts: [
+            { text: 'Meditation music', weight: 1.5 },
+            { text: 'Singing bowls', weight: 1.2 },
+            { text: 'Focus', weight: 1.0 },
+        ],
+    },
 ];
 
 export default function PresetSelector({ selectedPreset, onPresetChange }) {

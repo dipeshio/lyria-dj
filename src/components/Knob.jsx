@@ -13,6 +13,7 @@ export default function Knob({
     onChange,
     step = 0.01,
     defaultValue,
+    tooltip = '',
     formatValue = (v) => v.toFixed(2)
 }) {
     const [isDragging, setIsDragging] = useState(false);
@@ -207,10 +208,20 @@ export default function Knob({
                 {formatValue(value)}
             </span>
 
-            {/* Label */}
-            <span className="knob-label font-serif">
-                {label}
-            </span>
+            {/* Label with Tooltip */}
+            <div className="relative group flex flex-col items-center">
+                <span className="knob-label font-serif border-b border-dotted border-gray-400 cursor-help">
+                    {label}
+                </span>
+
+                {tooltip && (
+                    <div className="absolute bottom-full mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                        {tooltip}
+                        {/* Little arrow */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
