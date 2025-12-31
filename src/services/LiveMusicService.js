@@ -42,18 +42,23 @@ class LiveMusicService extends EventTarget {
         });
 
         // Initialize Gemini model for text generation (prompt enhancement)
-        this.textModel = this.ai.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+        // With @google/genai SDK, we access models via this.ai.models
+        this.textModelName = 'gemini-3-flash-preview';
     }
 
     /**
      * Enhance a basic prompt with more descriptive detail
      */
+    /**
+     * Enhance a basic prompt with more descriptive detail
+     */
     async enhancePrompt(basePrompt) {
-        if (!this.textModel) return basePrompt;
+        if (!this.ai) return basePrompt;
 
         try {
             console.log('✨ [AI] Enhancing prompt:', basePrompt);
-            const result = await this.textModel.generateContent({
+            const result = await this.ai.models.generateContent({
+                model: this.textModelName,
                 contents: [{
                     role: 'user',
                     parts: [{
@@ -63,9 +68,20 @@ class LiveMusicService extends EventTarget {
                     }]
                 }]
             });
-            const enhanced = result.response.text().trim().replace(/^"|"$/g, '');
-            console.log('✅ [AI] Enhanced prompt:', enhanced);
-            return enhanced;
+
+            // Handle various response formats safely
+            let enhanced = basePrompt;
+            if (typeof result.text === 'function') {
+                enhanced = result.text();
+            } else if (result.response && typeof result.response.text === 'function') {
+                enhanced = result.response.text();
+            } else if (result.text) {
+                enhanced = result.text;
+            }
+
+            const cleanEnhanced = enhanced.trim().replace(/^"|"$/g, '');
+            console.log('✅ [AI] Enhanced prompt:', cleanEnhanced);
+            return cleanEnhanced;
         } catch (error) {
             console.error('❌ [AI] Failed to enhance prompt:', error);
             return basePrompt;
@@ -76,14 +92,15 @@ class LiveMusicService extends EventTarget {
      * Generate a completely new creative prompt
      */
     async generateCreativePrompt() {
-        if (!this.textModel) return "Lofi hip hop beats to study to";
+        if (!this.ai) return "Lofi hip hop beats to study to";
 
         try {
             console.log('🎲 [AI] Generating creative prompt...');
             const genres = ['Lofi', 'Jazz', 'Ambient', 'Synthwave', 'Classical', 'Techno', 'Cinematic'];
             const randomGenre = genres[Math.floor(Math.random() * genres.length)];
 
-            const result = await this.textModel.generateContent({
+            const result = await this.ai.models.generateContent({
+                model: this.textModelName,
                 contents: [{
                     role: 'user',
                     parts: [{
@@ -92,9 +109,19 @@ class LiveMusicService extends EventTarget {
                     }]
                 }]
             });
-            const creative = result.response.text().trim().replace(/^"|"$/g, '');
-            console.log('✅ [AI] Generated prompt:', creative);
-            return creative;
+            // Handle various response formats safely
+            let creative = "Atmospheric lofi";
+            if (typeof result.text === 'function') {
+                creative = result.text();
+            } else if (result.response && typeof result.response.text === 'function') {
+                creative = result.response.text();
+            } else if (result.text) {
+                creative = result.text;
+            }
+
+            const cleanCreative = creative.trim().replace(/^"|"$/g, '');
+            console.log('✅ [AI] Generated prompt:', cleanCreative);
+            return cleanCreative;
         } catch (error) {
             console.error('❌ [AI] Failed to generate prompt:', error);
             return "Atmospheric lofi beats with soft rain texture";
