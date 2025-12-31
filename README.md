@@ -1,5 +1,7 @@
 # PromptDJ Retro
 
+![PromptDJ Retro Interface](image.png)
+
 A retro-styled control interface for Google's Lyria RealTime (Music) API, featuring the "Claude Academic Retro" aesthetic.
 
 ## Features
