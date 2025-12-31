@@ -70,6 +70,10 @@ export default function App() {
     const [guidance, setGuidance] = useState(4.0);  // Default 4.0, range 0-6
     const [density, setDensity] = useState(0.5);    // Range 0-1
     const [brightness, setBrightness] = useState(0.5); // Range 0-1
+    const [volume, setVolume] = useState(() => {
+        const saved = localStorage.getItem('lyria-volume');
+        return saved ? parseFloat(saved) : 0.75;
+    });
 
     // Auto-drift/Random tuning state
     const [isAutoDriftEnabled, setIsAutoDriftEnabled] = useState(false);
@@ -239,6 +243,13 @@ export default function App() {
     const handleBrightnessChange = useCallback((value) => {
         setBrightness(value);
         liveMusicService.setMusicConfig({ brightness: value });
+    }, []);
+
+    const handleVolumeChange = useCallback((e) => {
+        const value = parseFloat(e.target.value);
+        setVolume(value);
+        localStorage.setItem('lyria-volume', value);
+        liveMusicService.setVolume(value);
     }, []);
 
     // Format listening time as MM:SS
@@ -444,6 +455,25 @@ export default function App() {
                         playbackState={playbackState}
                         onClick={handlePlayPause}
                     />
+
+                    {/* Volume Slider */}
+                    <div className="flex items-center gap-3 w-48">
+                        <span className="text-xs font-serif" style={{ color: '#B1ADA1' }}>🔈</span>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={volume}
+                            onChange={handleVolumeChange}
+                            className="w-full h-2 appearance-none rounded cursor-pointer"
+                            style={{
+                                background: `linear-gradient(to right, #C15F3C ${volume * 100}%, #B1ADA1 ${volume * 100}%)`,
+                            }}
+                            title={`Volume: ${Math.round(volume * 100)}%`}
+                        />
+                        <span className="text-xs font-serif" style={{ color: '#B1ADA1' }}>🔊</span>
+                    </div>
 
                     {/* Listening Timer */}
                     {playbackState === 'playing' && (

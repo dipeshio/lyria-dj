@@ -142,6 +142,23 @@ class LiveMusicService extends EventTarget {
         // Use 44100Hz sample rate per Google documentation
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
         this.outputNode = this.audioContext.createGain();
+
+        // Master volume node
+        this.masterGain = this.audioContext.createGain();
+        this.masterGain.gain.value = this.volume || 1.0;
+        this.outputNode.connect(this.masterGain);
+        this.masterGain.connect(this.audioContext.destination);
+    }
+
+    /**
+     * Set master volume (0.0 - 1.0)
+     */
+    setVolume(value) {
+        this.volume = Math.max(0, Math.min(1, value));
+        if (this.masterGain) {
+            this.masterGain.gain.setValueAtTime(this.volume, this.audioContext.currentTime);
+        }
+        console.log('🔊 [Volume] Set to:', Math.round(this.volume * 100) + '%');
     }
 
     /**
@@ -327,6 +344,7 @@ class LiveMusicService extends EventTarget {
      */
     async reconnect() {
         console.log('🔄 [Lyria] Reconnecting...');
+        const wasPlaying = this.playbackState === 'playing';
         this.sessionPromise = null;
         this.session = null;
         this.connectionError = false;
@@ -340,15 +358,17 @@ class LiveMusicService extends EventTarget {
             // Wait for new connection
             await this.connect();
 
-            // Re-send current prompts if connection succeeds
+            // Re-send current prompts
             if (this.prompts) {
                 await this.setWeightedPrompts(this.prompts);
             }
 
-            // Restore play state if we were playing
-            if (this.playbackState === 'playing') {
-                console.log('🎵 [Lyria] Auto-resuming playback after reconnect...');
-                await this.play();
+            // Direct resume if we were playing (skip full play() to avoid state thrashing)
+            if (wasPlaying && this.session) {
+                console.log('🎵 [Lyria] Direct session resume after reconnect...');
+                this.session = await this.getSession();
+                await this.session.play();
+                this.setPlaybackState('playing'); // Ensure state is correct
             }
 
             return true;
