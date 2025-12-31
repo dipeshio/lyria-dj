@@ -116,12 +116,21 @@ export default function Knob({
     }, [defaultValue, min, max, onChange]);
 
     // Cleanup on unmount
+    // Event listener setup with passive: false to allow e.preventDefault()
     useEffect(() => {
+        const knob = knobRef.current;
+        if (knob) {
+            knob.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
         return () => {
             if (rafId.current) cancelAnimationFrame(rafId.current);
             document.body.classList.remove('dragging');
+            if (knob) {
+                knob.removeEventListener('wheel', handleWheel);
+            }
         };
-    }, []);
+    }, [handleWheel]);
 
     const strokeColor = isActive ? '#C15F3C' : '#1F1E1D';
     const trackColor = '#B1ADA1';
@@ -143,7 +152,6 @@ export default function Knob({
                 viewBox="0 0 80 80"
                 className="cursor-grab active:cursor-grabbing touch-none"
                 onPointerDown={handlePointerDown}
-                onWheel={handleWheel}
                 onDoubleClick={handleDoubleClick}
                 title="Drag to adjust. Hold Shift for fine control. Double-click to reset."
             >

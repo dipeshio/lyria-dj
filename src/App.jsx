@@ -255,9 +255,10 @@ export default function App() {
             </header>
 
             {/* Error Toast */}
+            {/* Error Toast */}
             {error && (
                 <div
-                    className="fixed top-4 right-4 px-4 py-3 border font-serif text-sm max-w-sm"
+                    className="fixed top-4 right-4 px-4 py-3 border font-serif text-sm max-w-sm z-50"
                     style={{
                         backgroundColor: '#F5F3EE',
                         borderColor: '#C15F3C',
@@ -265,6 +266,36 @@ export default function App() {
                     }}
                 >
                     {error}
+                </div>
+            )}
+
+            {/* Fallback Mode Indicator */}
+            {activeEngine === 'fallback' && (
+                <div
+                    className="fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 border flex items-center gap-4 z-50 shadow-lg"
+                    style={{
+                        backgroundColor: '#1F1E1D',
+                        borderColor: '#C15F3C',
+                        color: '#F5F3EE'
+                    }}
+                >
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold uppercase tracking-wider text-terracotta">Connection Lost</span>
+                        <span className="text-xs opacity-70">Using local fallback synth</span>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            const success = await liveMusicService.reconnect();
+                            if (success) {
+                                setError(null);
+                            } else {
+                                setError('Reconnection failed. Try refreshing.');
+                            }
+                        }}
+                        className="px-3 py-1 bg-terracotta text-white text-xs uppercase font-bold rounded hover:bg-opacity-80 transition-opacity"
+                    >
+                        Reconnect
+                    </button>
                 </div>
             )}
 

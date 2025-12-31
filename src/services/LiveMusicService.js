@@ -204,6 +204,37 @@ class LiveMusicService extends EventTarget {
     }
 
     /**
+     * Force reset and reconnect to Lyria
+     */
+    async reconnect() {
+        console.log('🔄 [Lyria] Reconnecting...');
+        this.sessionPromise = null;
+        this.connectionError = false;
+
+        // Stop fallback if active
+        if (this.fallbackService && this.activeEngine === 'fallback') {
+            this.fallbackService.stop();
+        }
+
+        try {
+            await this.connect();
+
+            // Re-send current prompts if connection succeeds
+            if (this.lastPrompts) {
+                await this.setWeightedPrompts(this.lastPrompts);
+            }
+
+            // Config will be re-sent by UI components usually, but we could store it.
+            // For now, let's assume basic reconnection is enough to start fresh
+
+            return true;
+        } catch (error) {
+            console.error('❌ [Lyria] Reconnect failed:', error);
+            return false;
+        }
+    }
+
+    /**
      * Process incoming audio chunks
      */
     async processAudioChunks(audioChunks) {
