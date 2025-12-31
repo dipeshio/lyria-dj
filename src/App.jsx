@@ -21,8 +21,44 @@ export default function App() {
     const startTimeRef = useRef(null);
 
     // Preset and prompt state
+    const [presets, setPresets] = useState(() => {
+        const saved = localStorage.getItem('lyria-presets');
+        return saved ? JSON.parse(saved) : PRESETS;
+    });
     const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
     const [customPrompt, setCustomPrompt] = useState('');
+
+    // Persist presets when changed
+    useEffect(() => {
+        localStorage.setItem('lyria-presets', JSON.stringify(presets));
+    }, [presets]);
+
+    // Handle saving new preset
+    const handleSavePreset = useCallback((name, prompts) => {
+        if (presets.length >= 10) {
+            setError('Max 10 presets allowed. Delete one to save new.');
+            setTimeout(() => setError(null), 3000);
+            return;
+        }
+
+        const newPreset = {
+            id: `custom-${Date.now()}`,
+            name,
+            prompts,
+            isCustom: true
+        };
+
+        setPresets(prev => [...prev, newPreset]);
+        setSelectedPreset(newPreset);
+    }, [presets]);
+
+    // Handle deleting preset
+    const handleDeletePreset = useCallback((id) => {
+        setPresets(prev => prev.filter(p => p.id !== id));
+        if (selectedPreset?.id === id) {
+            setSelectedPreset(null); // Or fallback to first available
+        }
+    }, [selectedPreset]);
 
     // Control parameters - defaults per Lyria API docs
     const [bpm, setBpm] = useState(90);
@@ -234,8 +270,11 @@ export default function App() {
                 {/* Preset Selector */}
                 <section>
                     <PresetSelector
+                        presets={presets}
                         selectedPreset={selectedPreset}
                         onPresetChange={handlePresetChange}
+                        onSave={handleSavePreset}
+                        onDelete={handleDeletePreset}
                     />
                 </section>
 
