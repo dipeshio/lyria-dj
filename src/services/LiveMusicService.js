@@ -178,6 +178,7 @@ class LiveMusicService extends EventTarget {
                             this.isReconnecting = false;
 
                             this.activeEngine = 'lyria';
+                            this.useFallback = false; // Reset fallback on success
                             this.dispatchEvent(new CustomEvent('engine-changed', { detail: 'lyria' }));
                         }
 
@@ -266,6 +267,7 @@ class LiveMusicService extends EventTarget {
      */
     handleFinalFailure(reason) {
         console.error('❌ [Lyria] Connection failed permanently. Switching to fallback.');
+        this.connectionError = true;
         this.useFallback = true;
         this.activeEngine = 'fallback';
         this.retryCount = 0;
@@ -274,9 +276,31 @@ class LiveMusicService extends EventTarget {
         this.dispatchEvent(new CustomEvent('engine-changed', { detail: 'fallback' }));
         this.dispatchEvent(new CustomEvent('error', { detail: reason }));
 
-        // Start fallback if we were playing
-        if (this.playbackState === 'playing') {
+        // Cleanup Lyria session if it exists
+        if (this.session) {
+            try { this.session.stop(); } catch { }
+            this.session = null;
+            this.sessionPromise = null;
+        }
+        this.nextStartTime = 0;
+
+        // Reset output node to clear any stuck audio
+        try {
+            this.outputNode.disconnect();
+        } catch { }
+        if (this.audioContext) {
+            this.outputNode = this.audioContext.createGain();
+            this.outputNode.connect(this.audioContext.destination);
+        }
+
+        // Start fallback if we were playing or loading
+        if (this.playbackState === 'playing' || this.playbackState === 'loading') {
+            console.log('🎹 [Fallback] Starting fallback synth playback');
+            fallbackService.setWeightedPrompts(this.prompts);
             fallbackService.play();
+            this.setPlaybackState('playing');
+        } else {
+            this.setPlaybackState('stopped');
         }
     }
 
@@ -379,45 +403,6 @@ class LiveMusicService extends EventTarget {
     }
 
     /**
-     * Handle connection failure by switching to fallback
-     */
-    handleConnectionFailure(message) {
-        this.connectionError = true;
-        this.useFallback = true;
-        this.activeEngine = 'fallback';
-        this.dispatchEvent(new CustomEvent('engine-changed', { detail: 'fallback' }));
-
-        // Stop Lyria playback if it was active
-        if (this.session) {
-            try { this.session.stop(); } catch { }
-            this.session = null;
-            this.sessionPromise = null;
-        }
-        this.nextStartTime = 0;
-        try {
-            this.outputNode.disconnect();
-        } catch { }
-        if (this.audioContext) {
-            this.outputNode = this.audioContext.createGain();
-        }
-
-        // Transfer state to fallback service
-        fallbackService.setWeightedPrompts(this.prompts);
-
-        this.dispatchEvent(new CustomEvent('error', {
-            detail: message
-        }));
-
-        // If we were trying to play, switch to fallback play
-        if (this.playbackState === 'loading' || this.playbackState === 'playing') {
-            fallbackService.play();
-            this.setPlaybackState('playing');
-        } else {
-            this.setPlaybackState('stopped');
-        }
-    }
-
-    /**
      * Set weighted prompts for music generation
      */
     async setWeightedPrompts(prompts) {
@@ -481,7 +466,12 @@ class LiveMusicService extends EventTarget {
     async setMusicConfig(config) {
         console.log('🎛️ [Config] Setting music generation config:', config);
 
-        if (this.useFallback || !this.session) {
+        if (this.useFallback) {
+            fallbackService.setParameters(config);
+            return;
+        }
+
+        if (!this.session) {
             console.log('⏳ [Config] No active Lyria session, config will be applied on play');
             return;
         }
