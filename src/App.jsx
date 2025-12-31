@@ -21,22 +21,26 @@ export default function App() {
     const startTimeRef = useRef(null);
 
     // Preset and prompt state
-    const [presets, setPresets] = useState(() => {
-        const saved = localStorage.getItem('lyria-presets');
-        return saved ? JSON.parse(saved) : PRESETS;
+    const [customPresets, setCustomPresets] = useState(() => {
+        const saved = localStorage.getItem('lyria-custom-presets');
+        return saved ? JSON.parse(saved) : [];
     });
+
+    // Combine built-in + custom
+    const presets = [...PRESETS, ...customPresets];
+
     const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
     const [customPrompt, setCustomPrompt] = useState('');
 
-    // Persist presets when changed
+    // Persist custom presets when changed
     useEffect(() => {
-        localStorage.setItem('lyria-presets', JSON.stringify(presets));
-    }, [presets]);
+        localStorage.setItem('lyria-custom-presets', JSON.stringify(customPresets));
+    }, [customPresets]);
 
     // Handle saving new preset
     const handleSavePreset = useCallback((name, prompts) => {
-        if (presets.length >= 10) {
-            setError('Max 10 presets allowed. Delete one to save new.');
+        if (presets.length >= 20) {
+            setError('Max limit reached. Delete a custom preset to save new.');
             setTimeout(() => setError(null), 3000);
             return;
         }
@@ -48,15 +52,15 @@ export default function App() {
             isCustom: true
         };
 
-        setPresets(prev => [...prev, newPreset]);
+        setCustomPresets(prev => [...prev, newPreset]);
         setSelectedPreset(newPreset);
     }, [presets]);
 
     // Handle deleting preset
     const handleDeletePreset = useCallback((id) => {
-        setPresets(prev => prev.filter(p => p.id !== id));
+        setCustomPresets(prev => prev.filter(p => p.id !== id));
         if (selectedPreset?.id === id) {
-            setSelectedPreset(null); // Or fallback to first available
+            setSelectedPreset(PRESETS[0]); // Fallback safely
         }
     }, [selectedPreset]);
 
