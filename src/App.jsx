@@ -30,6 +30,10 @@ export default function App() {
     const [density, setDensity] = useState(0.5);    // Range 0-1
     const [brightness, setBrightness] = useState(0.5); // Range 0-1
 
+    // Auto-drift/Random tuning state
+    const [isAutoDriftEnabled, setIsAutoDriftEnabled] = useState(false);
+    const nextDriftTimeRef = useRef(180); // First drift at 3 minutes
+
     // Initialize music service
     useEffect(() => {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY ||
@@ -67,12 +71,19 @@ export default function App() {
         };
     }, []);
 
-    // Listening timer effect
+    // Listening timer and auto-drift effect
     useEffect(() => {
         if (playbackState === 'playing') {
             startTimeRef.current = Date.now() - listeningTime * 1000;
             timerRef.current = setInterval(() => {
-                setListeningTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+                const currentSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                setListeningTime(currentSec);
+
+                // Auto-drift logic (every 3 minutes / 180 seconds)
+                if (isAutoDriftEnabled && currentSec >= nextDriftTimeRef.current) {
+                    applyRandomTuning();
+                    nextDriftTimeRef.current = currentSec + 180; // Schedule next drift
+                }
             }, 1000);
         } else {
             if (timerRef.current) {
@@ -82,7 +93,35 @@ export default function App() {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [playbackState]);
+    }, [playbackState, isAutoDriftEnabled]); // added dependency to restart timer with drift logic
+
+    const applyRandomTuning = () => {
+        console.log('🎲 [Auto-Drift] Applying random parameter tuning...');
+
+        // Random BPM change (-10 to +10)
+        const bpmDelta = Math.floor(Math.random() * 21) - 10;
+        const newBpm = Math.min(200, Math.max(60, bpm + bpmDelta));
+        setBpm(newBpm);
+        liveMusicService.setTempo(newBpm);
+
+        // Random Guidance change (-1 to +1)
+        const guidanceDelta = (Math.random() * 2) - 1;
+        const newGuidance = Math.min(6, Math.max(0, guidance + guidanceDelta));
+        setGuidance(newGuidance);
+        liveMusicService.setMusicConfig({ guidance: newGuidance });
+
+        // Random Density change (-0.15 to +0.15)
+        const densityDelta = (Math.random() * 0.3) - 0.15;
+        const newDensity = Math.min(1, Math.max(0, density + densityDelta));
+        setDensity(newDensity);
+        liveMusicService.setMusicConfig({ density: newDensity });
+
+        // Random Brightness change (-0.1 to +0.1)
+        const brightnessDelta = (Math.random() * 0.2) - 0.1;
+        const newBrightness = Math.min(1, Math.max(0, brightness + brightnessDelta));
+        setBrightness(newBrightness);
+        liveMusicService.setMusicConfig({ brightness: newBrightness });
+    };
 
     // Update prompts when preset changes
     useEffect(() => {
@@ -199,12 +238,30 @@ export default function App() {
 
                 {/* Control Knobs */}
                 <section>
-                    <h2
-                        className="text-sm uppercase tracking-widest mb-6"
-                        style={{ color: '#B1ADA1' }}
-                    >
-                        Parameters
-                    </h2>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-sm uppercase tracking-widest" style={{ color: '#B1ADA1' }}>
+                            Parameters
+                        </h2>
+
+                        {/* Auto-Drift Toggle */}
+                        <button
+                            onClick={() => setIsAutoDriftEnabled(!isAutoDriftEnabled)}
+                            className={`
+                                flex items-center gap-2 px-3 py-1 
+                                text-xs font-serif uppercase tracking-wider
+                                border transition-all duration-300
+                            `}
+                            style={{
+                                backgroundColor: isAutoDriftEnabled ? '#1F1E1D' : 'transparent',
+                                borderColor: isAutoDriftEnabled ? '#1F1E1D' : '#B1ADA1',
+                                color: isAutoDriftEnabled ? '#F5F3EE' : '#B1ADA1',
+                            }}
+                            title="Automatically varies parameters every 3 minutes"
+                        >
+                            <span className={`w-2 h-2 rounded-full ${isAutoDriftEnabled ? 'animate-pulse bg-terracotta' : 'bg-gray-400'}`}></span>
+                            Auto-Drift: {isAutoDriftEnabled ? 'ON' : 'OFF'}
+                        </button>
+                    </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 justify-items-center">
                         <Knob
