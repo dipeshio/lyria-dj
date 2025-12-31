@@ -231,6 +231,10 @@ class LiveMusicService extends EventTarget {
     handleConnectionFailure(reason) {
         console.warn(`⚠️ [Lyria] Connection issue: ${reason}`);
 
+        // Explicitly null session to prevent stale references while reconnecting
+        this.session = null;
+        this.sessionPromise = null;
+
         // If explicitly stopped or max retries reached, fail permanently
         if (this.retryCount >= this.maxRetries) {
             this.handleFinalFailure(reason);
@@ -324,6 +328,7 @@ class LiveMusicService extends EventTarget {
     async reconnect() {
         console.log('🔄 [Lyria] Reconnecting...');
         this.sessionPromise = null;
+        this.session = null;
         this.connectionError = false;
 
         // Stop fallback if active
@@ -332,15 +337,19 @@ class LiveMusicService extends EventTarget {
         }
 
         try {
+            // Wait for new connection
             await this.connect();
 
             // Re-send current prompts if connection succeeds
-            if (this.lastPrompts) {
-                await this.setWeightedPrompts(this.lastPrompts);
+            if (this.prompts) {
+                await this.setWeightedPrompts(this.prompts);
             }
 
-            // Config will be re-sent by UI components usually, but we could store it.
-            // For now, let's assume basic reconnection is enough to start fresh
+            // Restore play state if we were playing
+            if (this.playbackState === 'playing') {
+                console.log('🎵 [Lyria] Auto-resuming playback after reconnect...');
+                await this.play();
+            }
 
             return true;
         } catch (error) {
