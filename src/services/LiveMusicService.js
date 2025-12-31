@@ -196,12 +196,23 @@ class LiveMusicService extends EventTarget {
                         }
                     },
                     onerror: (error) => {
-                        console.error('❌ [Lyria] WebSocket Error:', error);
+                        console.error('❌ [Lyria] WebSocket Error Details:', {
+                            message: error?.message,
+                            error: error,
+                            stack: error?.stack
+                        });
                         this.handleConnectionFailure(`Connection error: ${error?.message || 'Unknown error'}`);
                     },
                     onclose: (event) => {
-                        console.warn('🔌 [Lyria] WebSocket Closed:', event?.reason || 'No reason provided');
-                        this.handleConnectionFailure('Connection closed by server. Switching to fallback engine.');
+                        console.warn('🔌 [Lyria] WebSocket Closed Details:', {
+                            code: event?.code,
+                            reason: event?.reason,
+                            wasClean: event?.wasClean,
+                            timestamp: new Date().toLocaleTimeString()
+                        });
+
+                        const closeReason = event?.reason || `Code: ${event?.code}`;
+                        this.handleConnectionFailure(`Connection closed: ${closeReason}`);
                     },
                 },
             });
@@ -239,25 +250,28 @@ class LiveMusicService extends EventTarget {
         this.retryCount++;
 
         const delay = Math.pow(2, this.retryCount - 1) * 1000; // 1s, 2s, 4s, 8s, 16s
-        console.log(`🔄 [Lyria] Auto-reconnect attempt ${this.retryCount}/${this.maxRetries} in ${delay}ms...`);
+        console.log(`🔄 [Lyria] Auto-reconnect triggered: Attempt ${this.retryCount}/${this.maxRetries}. Waiting ${delay}ms...`);
 
         // Notify UI of reconnection attempt
         this.dispatchEvent(new CustomEvent('reconnecting', {
-            detail: { attempt: this.retryCount, max: this.maxRetries, delay }
+            detail: { attempt: this.retryCount, max: this.maxRetries, delay, reason }
         }));
 
         setTimeout(async () => {
+            console.log(`🏃 [Lyria] Executing reconnect attempt ${this.retryCount}...`);
             try {
-                this.isReconnecting = false; // Allow the connect logic to proceed
+                this.isReconnecting = false;
                 const success = await this.reconnect();
 
-                if (!success) {
-                    // Force next retry if reconnect didn't throw but returned false
-                    // (reconnect() swallows errors, preventing handleConnectionFailure from firing automatically via onerror in some cases)
-                    this.handleConnectionFailure('Reconnect attempt failed');
+                if (success) {
+                    console.log(`✅ [Lyria] Reconnect attempt ${this.retryCount} succeeded!`);
+                } else {
+                    console.warn(`⚠️ [Lyria] Reconnect attempt ${this.retryCount} failed to establish session.`);
+                    this.handleConnectionFailure('Reconnect attempt failed to return success');
                 }
             } catch (e) {
-                this.handleConnectionFailure('Reconnect wrapper failed');
+                console.error(`❌ [Lyria] Reconnect attempt ${this.retryCount} crashed:`, e);
+                this.handleConnectionFailure('Reconnect wrapper exception');
             }
         }, delay);
     }

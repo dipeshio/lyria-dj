@@ -21,52 +21,6 @@ export default function App() {
     const timerRef = useRef(null);
     const startTimeRef = useRef(null);
 
-    // Initialize music service
-    useEffect(() => {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY ||
-            import.meta.env.GEMINI_API_KEY;
-
-        if (apiKey) {
-            liveMusicService.init(apiKey);
-        } else {
-            console.warn('VITE_GEMINI_API_KEY not found in environment');
-        }
-
-        // Listen for playback state changes
-        const handleStateChange = (e) => {
-            setPlaybackState(e.detail);
-        };
-
-        const handleError = (e) => {
-            setError(e.detail);
-            setTimeout(() => setError(null), 5000);
-        };
-
-        const handleEngineChange = (e) => {
-            setActiveEngine(e.detail);
-            // Clear reconnecting status when engine changes (either success or fallback)
-            setReconnectStatus(null);
-        };
-
-        const handleReconnecting = (e) => {
-            setReconnectStatus(e.detail);
-        };
-
-        liveMusicService.addEventListener('playback-state-changed', handleStateChange);
-        liveMusicService.addEventListener('error', handleError);
-        liveMusicService.addEventListener('engine-changed', handleEngineChange);
-        liveMusicService.addEventListener('reconnecting', handleReconnecting);
-
-        return () => {
-            liveMusicService.removeEventListener('playback-state-changed', handleStateChange);
-            liveMusicService.removeEventListener('error', handleError);
-            liveMusicService.removeEventListener('engine-changed', handleEngineChange);
-            liveMusicService.removeEventListener('reconnecting', handleReconnecting);
-
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, []);
-
     // Preset and prompt state
     const [customPresets, setCustomPresets] = useState(() => {
         const saved = localStorage.getItem('lyria-custom-presets');
@@ -143,24 +97,29 @@ export default function App() {
         };
 
         const handleEngineChange = (e) => {
+            console.log(`🔌 [App] Engine changed to: ${e.detail}`);
             setActiveEngine(e.detail);
             // Clear reconnecting status when engine changes (either success or fallback)
             setReconnectStatus(null);
         };
 
         const handleReconnecting = (e) => {
+            console.log(`🔄 [App] Reconnection event received:`, e.detail);
             setReconnectStatus(e.detail);
         };
 
         liveMusicService.addEventListener('playback-state-changed', handleStateChange);
         liveMusicService.addEventListener('error', handleError);
         liveMusicService.addEventListener('engine-changed', handleEngineChange);
+        liveMusicService.addEventListener('reconnecting', handleReconnecting);
 
         return () => {
             liveMusicService.removeEventListener('playback-state-changed', handleStateChange);
             liveMusicService.removeEventListener('error', handleError);
             liveMusicService.removeEventListener('engine-changed', handleEngineChange);
-            liveMusicService.destroy();
+            liveMusicService.removeEventListener('reconnecting', handleReconnecting);
+
+            if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
 
