@@ -461,14 +461,14 @@ export default function App() {
                         <span className="text-xs font-serif" style={{ color: '#B1ADA1' }}>🔈</span>
                         <input
                             type="range"
-                            min="0"
-                            max="1"
+                            min="0.25"
+                            max="1.75"
                             step="0.01"
                             value={volume}
                             onChange={handleVolumeChange}
                             className="w-full h-2 appearance-none rounded cursor-pointer"
                             style={{
-                                background: `linear-gradient(to right, #C15F3C ${volume * 100}%, #B1ADA1 ${volume * 100}%)`,
+                                background: `linear-gradient(to right, #C15F3C ${((volume - 0.25) / 1.5) * 100}%, #B1ADA1 ${((volume - 0.25) / 1.5) * 100}%)`,
                             }}
                             title={`Volume: ${Math.round(volume * 100)}%`}
                         />

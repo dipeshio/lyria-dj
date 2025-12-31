@@ -158,10 +158,11 @@ Now enhance: "${basePrompt}"`
     }
 
     /**
-     * Set master volume (0.0 - 1.0)
+     * Set master volume (0.0 - 1.75, where 1.0 is 100%)
+     * Supports -75% (0.25) to +75% (1.75) range
      */
     setVolume(value) {
-        this.volume = Math.max(0, Math.min(1, value));
+        this.volume = Math.max(0, Math.min(1.75, value));
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.volume, this.audioContext.currentTime);
         }
