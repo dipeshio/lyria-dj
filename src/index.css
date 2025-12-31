@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Claude Academic Retro Design System */
+:root {
+  --bg-paper: #F5F3EE;
+  --text-primary: #1F1E1D;
+  --accent-terracotta: #C15F3C;
+  --accent-muted: #B1ADA1;
+  --font-serif: 'Merriweather', 'Georgia', serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: var(--font-serif);
+  background-color: #F5F3EE;
+  /* Hardcoded fallback */
+  color: #1F1E1D;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Academic print-design aesthetic - no shadows */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  border: 1px solid var(--text-primary);
+  background: transparent;
+  outline: none;
+}
+
+button:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent-terracotta);
+}
+
+/* Typography hierarchy */
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--accent-muted);
+}
+
+/* Flat button style */
+.btn-retro {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--text-primary);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-retro:hover {
+  background-color: var(--text-primary);
+  color: var(--bg-paper);
+}
+
+.btn-retro.active {
+  background-color: var(--accent-terracotta);
+  border-color: var(--accent-terracotta);
+  color: var(--bg-paper);
+}
+
+/* Knob label styling */
+.knob-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-primary);
+}
+
+/* Prevent text selection during drag */
+.dragging {
+  cursor: ns-resize !important;
+  user-select: none;
+}
+
+.dragging * {
+  user-select: none;
+  pointer-events: none;
+}

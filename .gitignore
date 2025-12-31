@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files (API keys - NEVER commit!)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# BMAD workflow files (internal planning)
+_bmad-output/
+bmad/
+_bmad/
+.bmad/
+*.bmad
+
+# Magenta service (deprecated/unused)
+src/services/MagentaService.js
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Testing
+coverage/
