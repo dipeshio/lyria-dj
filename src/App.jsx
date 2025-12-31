@@ -14,11 +14,58 @@ export default function App() {
     const [playbackState, setPlaybackState] = useState('stopped');
     const [error, setError] = useState(null);
     const [activeEngine, setActiveEngine] = useState('none');
+    const [reconnectStatus, setReconnectStatus] = useState(null);
 
     // Listening duration timer
     const [listeningTime, setListeningTime] = useState(0);
     const timerRef = useRef(null);
     const startTimeRef = useRef(null);
+
+    // Initialize music service
+    useEffect(() => {
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY ||
+            import.meta.env.GEMINI_API_KEY;
+
+        if (apiKey) {
+            liveMusicService.init(apiKey);
+        } else {
+            console.warn('VITE_GEMINI_API_KEY not found in environment');
+        }
+
+        // Listen for playback state changes
+        const handleStateChange = (e) => {
+            setPlaybackState(e.detail);
+        };
+
+        const handleError = (e) => {
+            setError(e.detail);
+            setTimeout(() => setError(null), 5000);
+        };
+
+        const handleEngineChange = (e) => {
+            setActiveEngine(e.detail);
+            // Clear reconnecting status when engine changes (either success or fallback)
+            setReconnectStatus(null);
+        };
+
+        const handleReconnecting = (e) => {
+            setReconnectStatus(e.detail);
+        };
+
+        liveMusicService.addEventListener('playback-state-changed', handleStateChange);
+        liveMusicService.addEventListener('error', handleError);
+        liveMusicService.addEventListener('engine-changed', handleEngineChange);
+        liveMusicService.addEventListener('reconnecting', handleReconnecting);
+
+        return () => {
+            liveMusicService.removeEventListener('playback-state-changed', handleStateChange);
+            liveMusicService.removeEventListener('error', handleError);
+            liveMusicService.removeEventListener('engine-changed', handleEngineChange);
+            liveMusicService.removeEventListener('reconnecting', handleReconnecting);
+
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, []);
 
     // Preset and prompt state
     const [customPresets, setCustomPresets] = useState(() => {
@@ -97,6 +144,12 @@ export default function App() {
 
         const handleEngineChange = (e) => {
             setActiveEngine(e.detail);
+            // Clear reconnecting status when engine changes (either success or fallback)
+            setReconnectStatus(null);
+        };
+
+        const handleReconnecting = (e) => {
+            setReconnectStatus(e.detail);
         };
 
         liveMusicService.addEventListener('playback-state-changed', handleStateChange);
@@ -269,8 +322,27 @@ export default function App() {
                 </div>
             )}
 
+            {/* Reconnecting Banner */}
+            {reconnectStatus && (
+                <div
+                    className="fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 border flex items-center gap-4 z-50 shadow-lg animate-pulse"
+                    style={{
+                        backgroundColor: '#1F1E1D',
+                        borderColor: '#E8A735', // Yellow/Gold for warning
+                        color: '#F5F3EE'
+                    }}
+                >
+                    <div className="flex flex-col items-center">
+                        <span className="text-sm font-bold uppercase tracking-wider">Connection Lost</span>
+                        <span className="text-xs text-[#E8A735]">
+                            Reconnecting (Attempt {reconnectStatus.attempt}/{reconnectStatus.max})...
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Fallback Mode Indicator */}
-            {activeEngine === 'fallback' && (
+            {activeEngine === 'fallback' && !reconnectStatus && (
                 <div
                     className="fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 border flex items-center gap-4 z-50 shadow-lg"
                     style={{

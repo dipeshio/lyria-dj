@@ -24,6 +24,11 @@ class LiveMusicService extends EventTarget {
         this.connectionError = true;
         this.useFallback = false;
         this.activeEngine = 'none'; // 'lyria', 'fallback', or 'none'
+
+        // Auto-reconnect state
+        this.retryCount = 0;
+        this.maxRetries = 5;
+        this.isReconnecting = false;
     }
 
     /**
@@ -167,6 +172,11 @@ class LiveMusicService extends EventTarget {
                         if (message.setupComplete) {
                             console.log('✅ [Lyria] Connection established and setup complete!');
                             this.connectionError = false;
+
+                            // Reset retry state on successful connection
+                            this.retryCount = 0;
+                            this.isReconnecting = false;
+
                             this.activeEngine = 'lyria';
                             this.dispatchEvent(new CustomEvent('engine-changed', { detail: 'lyria' }));
                         }
@@ -200,6 +210,73 @@ class LiveMusicService extends EventTarget {
             console.error('❌ [Lyria] Connection failed:', error);
             this.connectionError = true;
             throw error;
+        }
+    }
+
+    /**
+     * Handle connection failure with auto-retry logic
+     */
+    handleConnectionFailure(reason) {
+        console.warn(`⚠️ [Lyria] Connection issue: ${reason}`);
+
+        // If explicitly stopped or max retries reached, fail permanently
+        if (this.retryCount >= this.maxRetries) {
+            this.handleFinalFailure(reason);
+            return;
+        }
+
+        this.attemptAutoReconnect(reason);
+    }
+
+    /**
+     * Attempt to reconnect with exponential backoff
+     */
+    attemptAutoReconnect(reason) {
+        if (this.isReconnecting) return;
+
+        this.isReconnecting = true;
+        this.retryCount++;
+
+        const delay = Math.pow(2, this.retryCount - 1) * 1000; // 1s, 2s, 4s, 8s, 16s
+        console.log(`🔄 [Lyria] Auto-reconnect attempt ${this.retryCount}/${this.maxRetries} in ${delay}ms...`);
+
+        // Notify UI of reconnection attempt
+        this.dispatchEvent(new CustomEvent('reconnecting', {
+            detail: { attempt: this.retryCount, max: this.maxRetries, delay }
+        }));
+
+        setTimeout(async () => {
+            try {
+                this.isReconnecting = false; // Allow the connect logic to proceed
+                const success = await this.reconnect();
+
+                if (!success) {
+                    // Force next retry if reconnect didn't throw but returned false
+                    // (reconnect() swallows errors, preventing handleConnectionFailure from firing automatically via onerror in some cases)
+                    this.handleConnectionFailure('Reconnect attempt failed');
+                }
+            } catch (e) {
+                this.handleConnectionFailure('Reconnect wrapper failed');
+            }
+        }, delay);
+    }
+
+    /**
+     * Final failure handler - switches to fallback
+     */
+    handleFinalFailure(reason) {
+        console.error('❌ [Lyria] Connection failed permanently. Switching to fallback.');
+        this.useFallback = true;
+        this.activeEngine = 'fallback';
+        this.retryCount = 0;
+        this.isReconnecting = false;
+
+        this.dispatchEvent(new CustomEvent('engine-changed', { detail: 'fallback' }));
+        this.dispatchEvent(new CustomEvent('error', { detail: reason }));
+
+        // Start fallback if we were playing
+        if (this.playbackState === 'playing') {
+            fallbackService.play();
         }
     }
 
