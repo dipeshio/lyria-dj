@@ -1,16 +1,22 @@
-# 🎵 lyria-music-controller
+# lyria-music-controller
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+Vite + React + Tailwind app for controlling music playback with a minimal UI.
 
-A React-based AI music controller powered by Google Lyria RealTime API with a retro aesthetic interface.
-
-## Setup
-
+## Install
 ```bash
 npm install
+```
+
+## Develop
+```bash
 npm run dev
 ```
 
-## License
+## Build
+```bash
+npm run build
+```
+Static assets live in dist/ after build. Key code sits in src/ (App.jsx, components/, services/).
 
-MIT © 2026 dipeshio
+## License
+MIT
