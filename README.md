@@ -1,27 +1,16 @@
-# lyria-music-controller
+# 🎵 lyria-music-controller
 
-Modern music controller web application built with Vite, React, and Tailwind CSS. Features a clean interface for music playback control.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Tech Stack
-- Vite (build tool)
-- React
-- Tailwind CSS
-- PostCSS
+A React-based AI music controller powered by Google Lyria RealTime API with a retro aesthetic interface.
 
-## Installation
+## Setup
+
 ```bash
 npm install
-```
-
-## Development
-```bash
 npm run dev
 ```
 
-## Build
-```bash
-npm run build
-```
-
 ## License
-MIT
+
+MIT © 2026 dipeshio
