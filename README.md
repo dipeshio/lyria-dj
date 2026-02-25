@@ -18,5 +18,8 @@ npm run build
 ```
 Static assets live in dist/ after build. Key code sits in src/ (App.jsx, components/, services/).
 
+## Add .env file
+Within, VITE_GEMINI_API_KEY = Key Goes Here
+
 ## License
 MIT
